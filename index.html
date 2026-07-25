@@ -39,6 +39,7 @@
 
         html, body {
             height: 100%;
+            min-height: 100dvh;
             overflow: hidden;
         }
 
@@ -893,7 +894,10 @@
 
         window.addEventListener('resize', () => { if (running && !paused) resize(); });
 
-        // Service Worker removed for debugging
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(e => console.log('SW error:', e));
+        }
     </script>
 </body>
 </html>
