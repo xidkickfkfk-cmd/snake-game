@@ -672,6 +672,11 @@
         let activeSkin = localStorage.getItem('snakeSkin') || 'green';
         let records = JSON.parse(localStorage.getItem('snakeRecords') || '[]');
         let playerName = localStorage.getItem('snakePlayerName') || '';
+        let playerId = localStorage.getItem('snakePlayerId') || '';
+        if (!playerId) {
+            playerId = 'p' + Date.now() + Math.random().toString(36).slice(2, 7);
+            localStorage.setItem('snakePlayerId', playerId);
+        }
         let difficulty = localStorage.getItem('snakeDifficulty') || 'easy';
 
         // Game state
@@ -982,7 +987,7 @@
 
             // Save record
             if (score > 0) {
-                records.push({ score, level, coins: Math.floor(coinCount / 2), date: Date.now(), name: playerName || 'Игрок', difficulty });
+                records.push({ score, level, coins: Math.floor(coinCount / 2), date: Date.now(), name: playerName || 'Игрок', difficulty, playerId });
                 records.sort((a, b) => b.score - a.score);
                 records = records.slice(0, 10);
             }
@@ -1171,8 +1176,8 @@
         els.nameInput.addEventListener('input', () => {
             const val = els.nameInput.value.trim();
             const nameError = document.getElementById('nameError');
-            const taken = records.some(r => r.name && r.name.toLowerCase() === val.toLowerCase() && val !== '');
-            if (taken && val !== playerName) {
+            const takenByOther = val !== '' && records.some(r => r.name && r.name.toLowerCase() === val.toLowerCase() && r.playerId !== playerId);
+            if (takenByOther) {
                 nameError.classList.add('visible');
             } else {
                 nameError.classList.remove('visible');
