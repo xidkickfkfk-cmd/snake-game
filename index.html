@@ -893,10 +893,7 @@
 
         window.addEventListener('resize', () => { if (running && !paused) resize(); });
 
-        // Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
+        // Service Worker removed for debugging
     </script>
 </body>
 </html>
