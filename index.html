@@ -221,7 +221,14 @@
             gap: 10px;
             max-width: 320px;
             width: 100%;
+            max-height: 55vh;
+            overflow-y: auto;
+            padding: 4px;
         }
+
+        .shop-grid::-webkit-scrollbar { width: 4px; }
+        .shop-grid::-webkit-scrollbar-track { background: var(--surface); border-radius: 2px; }
+        .shop-grid::-webkit-scrollbar-thumb { background: var(--btn-border); border-radius: 2px; }
 
         .skin-card {
             display: flex;
@@ -449,14 +456,31 @@
 
         // Skins config
         const SKINS = [
-            { id: 'green',   name: 'Neon',     color: '#00ff88', glow: 'rgba(0,255,136,0.6)',   price: 0 },
-            { id: 'red',     name: 'Fire',     color: '#ff3333', glow: 'rgba(255,51,51,0.6)',    price: 0 },
-            { id: 'blue',    name: 'Ice',      color: '#33aaff', glow: 'rgba(51,170,255,0.6)',   price: 20 },
-            { id: 'purple',  name: 'Venom',    color: '#cc44ff', glow: 'rgba(204,68,255,0.6)',   price: 30 },
-            { id: 'gold',    name: 'Gold',     color: '#ffd700', glow: 'rgba(255,215,0,0.6)',    price: 50 },
-            { id: 'pink',    name: 'Cherry',   color: '#ff66aa', glow: 'rgba(255,102,170,0.6)',  price: 40 },
-            { id: 'cyan',    name: 'Electric', color: '#00eeff', glow: 'rgba(0,238,255,0.6)',    price: 60 },
-            { id: 'white',   name: 'Ghost',    color: '#e8ecf0', glow: 'rgba(232,236,240,0.5)',  price: 80 },
+            // Free
+            { id: 'green',   name: 'Neon',      color: '#00ff88', glow: 'rgba(0,255,136,0.6)',    price: 0 },
+            { id: 'red',     name: 'Fire',      color: '#ff3333', glow: 'rgba(255,51,51,0.6)',     price: 0 },
+            // Cheap
+            { id: 'orange',  name: 'Magma',     color: '#ff8800', glow: 'rgba(255,136,0,0.6)',     price: 15 },
+            { id: 'yellow',  name: 'Lemon',     color: '#ffee00', glow: 'rgba(255,238,0,0.6)',     price: 15 },
+            { id: 'lime',    name: 'Toxic',     color: '#aaff00', glow: 'rgba(170,255,0,0.6)',     price: 20 },
+            { id: 'blue',    name: 'Ice',       color: '#33aaff', glow: 'rgba(51,170,255,0.6)',    price: 20 },
+            // Mid
+            { id: 'purple',  name: 'Venom',     color: '#cc44ff', glow: 'rgba(204,68,255,0.6)',    price: 30 },
+            { id: 'pink',    name: 'Cherry',    color: '#ff66aa', glow: 'rgba(255,102,170,0.6)',   price: 40 },
+            { id: 'teal',    name: 'Jade',      color: '#00ccaa', glow: 'rgba(0,204,170,0.6)',     price: 35 },
+            { id: 'coral',   name: 'Coral',     color: '#ff7766', glow: 'rgba(255,119,102,0.6)',   price: 45 },
+            { id: 'sky',     name: 'Sky',       color: '#66ccff', glow: 'rgba(102,204,255,0.6)',   price: 50 },
+            // Expensive
+            { id: 'gold',    name: 'Gold',      color: '#ffd700', glow: 'rgba(255,215,0,0.6)',     price: 50 },
+            { id: 'cyan',    name: 'Electric',  color: '#00eeff', glow: 'rgba(0,238,255,0.6)',     price: 60 },
+            { id: 'magenta', name: 'Neon Pink', color: '#ff00ff', glow: 'rgba(255,0,255,0.6)',     price: 70 },
+            { id: 'white',   name: 'Ghost',     color: '#e8ecf0', glow: 'rgba(232,236,240,0.5)',   price: 80 },
+            // Premium
+            { id: 'chrome',  name: 'Chrome',    color: '#c0c0c0', glow: 'rgba(192,192,192,0.6)',   price: 100 },
+            { id: 'ruby',    name: 'Ruby',      color: '#e0115f', glow: 'rgba(224,17,95,0.6)',     price: 100 },
+            { id: 'sapphire',name: 'Sapphire',  color: '#0f52ba', glow: 'rgba(15,82,186,0.6)',     price: 100 },
+            { id: 'emerald', name: 'Emerald',   color: '#50c878', glow: 'rgba(80,200,120,0.6)',    price: 120 },
+            { id: 'rainbow', name: 'Rainbow',   color: '#ff4488', glow: 'rgba(255,68,136,0.6)',    price: 150 },
         ];
 
         // Load from localStorage
