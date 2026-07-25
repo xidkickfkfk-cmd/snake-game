@@ -950,12 +950,7 @@
         }
 
         function startGame() {
-            const nameError = document.getElementById('nameError');
-            const taken = playerName && records.some(r => r.name && r.name.toLowerCase() === playerName.toLowerCase());
-            if (taken) {
-                nameError.classList.add('visible');
-                return;
-            }
+            document.getElementById('nameError').classList.remove('visible');
             hideAll();
             init();
             running = true;
@@ -1177,7 +1172,7 @@
             const val = els.nameInput.value.trim();
             const nameError = document.getElementById('nameError');
             const taken = records.some(r => r.name && r.name.toLowerCase() === val.toLowerCase() && val !== '');
-            if (taken) {
+            if (taken && val !== playerName) {
                 nameError.classList.add('visible');
             } else {
                 nameError.classList.remove('visible');
