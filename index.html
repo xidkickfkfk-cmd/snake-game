@@ -327,6 +327,49 @@
             font-weight: normal;
         }
 
+        .name-error {
+            font-size: 12px;
+            color: var(--wall);
+            display: none;
+        }
+
+        .name-error.visible {
+            display: block;
+        }
+
+        .diff-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .diff-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .diff-btn {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 2px solid var(--btn-border);
+            border-radius: 8px;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .diff-btn:active { transform: scale(0.94); }
+
+        .diff-btn.active {
+            border-color: var(--snake);
+            color: var(--snake);
+            box-shadow: 0 0 10px var(--snake-glow);
+        }
+
         /* Shop */
         .shop-grid {
             display: grid;
@@ -474,6 +517,15 @@
         <div class="name-wrap">
             <label class="name-label" for="nameInput">Имя игрока</label>
             <input class="name-input" id="nameInput" type="text" placeholder="Введи имя..." maxlength="12" autocomplete="off">
+            <div class="name-error hidden" id="nameError">Это имя уже занято!</div>
+        </div>
+        <div class="diff-wrap">
+            <label class="name-label">Сложность</label>
+            <div class="diff-btns">
+                <button class="diff-btn active" data-diff="easy">Легко</button>
+                <button class="diff-btn" data-diff="normal">Норма</button>
+                <button class="diff-btn" data-diff="hard">Сложно</button>
+            </div>
         </div>
         <div class="overlay-sub">Собирай монеты, избегай стен. Каждый уровень — быстрее!</div>
         <div class="overlay-stats">
@@ -620,6 +672,7 @@
         let activeSkin = localStorage.getItem('snakeSkin') || 'green';
         let records = JSON.parse(localStorage.getItem('snakeRecords') || '[]');
         let playerName = localStorage.getItem('snakePlayerName') || '';
+        let difficulty = localStorage.getItem('snakeDifficulty') || 'easy';
 
         // Game state
         let snake = [];
@@ -650,6 +703,7 @@
             localStorage.setItem('snakeSkin', activeSkin);
             localStorage.setItem('snakeRecords', JSON.stringify(records));
             localStorage.setItem('snakePlayerName', playerName);
+            localStorage.setItem('snakeDifficulty', difficulty);
         }
 
         // UI elements
@@ -674,6 +728,7 @@
             overMsg: document.getElementById('overMsg'),
             pauseScreen: document.getElementById('pauseScreen'),
             nameInput: document.getElementById('nameInput'),
+            nameError: document.getElementById('nameError'),
             recordsScreen: document.getElementById('recordsScreen'),
             recordsList: document.getElementById('recordsList'),
             recordsCount: document.getElementById('recordsCount'),
@@ -703,7 +758,8 @@
             nextDir = { x: 1, y: 0 };
             score = 0;
             coinCount = 0;
-            coinTarget = 5 + (level - 1) * 2;
+            const targetBase = difficulty === 'easy' ? 4 : difficulty === 'normal' ? 5 : 6;
+            coinTarget = targetBase + (level - 1) * 2;
             walls = [];
             generateWalls();
             spawnCoin();
@@ -713,7 +769,8 @@
         function generateWalls() {
             walls = [];
             if (level < 3) return;
-            const numWalls = Math.min(level - 2, 8);
+            const wallMultiplier = difficulty === 'easy' ? 0.5 : difficulty === 'normal' ? 1 : 1.5;
+            const numWalls = Math.min(Math.floor((level - 2) * wallMultiplier), 12);
             for (let i = 0; i < numWalls; i++) {
                 const len = 3 + Math.floor(Math.random() * 3);
                 const horizontal = Math.random() > 0.5;
@@ -739,7 +796,9 @@
         }
 
         function getSpeed() {
-            return Math.max(80, 160 - level * 10);
+            const base = difficulty === 'easy' ? 180 : difficulty === 'normal' ? 140 : 100;
+            const min = difficulty === 'easy' ? 100 : difficulty === 'normal' ? 70 : 50;
+            return Math.max(min, base - level * 8);
         }
 
         function updateUI() {
@@ -891,6 +950,12 @@
         }
 
         function startGame() {
+            const nameError = document.getElementById('nameError');
+            const taken = playerName && records.some(r => r.name && r.name.toLowerCase() === playerName.toLowerCase());
+            if (taken) {
+                nameError.classList.add('visible');
+                return;
+            }
             hideAll();
             init();
             running = true;
@@ -922,7 +987,7 @@
 
             // Save record
             if (score > 0) {
-                records.push({ score, level, coins: Math.floor(coinCount / 2), date: Date.now(), name: playerName || 'Игрок' });
+                records.push({ score, level, coins: Math.floor(coinCount / 2), date: Date.now(), name: playerName || 'Игрок', difficulty });
                 records.sort((a, b) => b.score - a.score);
                 records = records.slice(0, 10);
             }
@@ -1023,11 +1088,12 @@
                 const date = new Date(r.date);
                 const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
                 const name = r.name || 'Игрок';
+                const diffLabel = r.difficulty === 'easy' ? 'Легко' : r.difficulty === 'hard' ? 'Сложно' : 'Норма';
                 row.innerHTML = `
                     <div class="record-rank ${rankClass}">${rank}</div>
                     <div class="record-info">
                         <div class="record-score">${r.score} pts</div>
-                        <div class="record-detail">${name} · Level ${r.level} · ${dateStr}</div>
+                        <div class="record-detail">${name} · ${diffLabel} · Level ${r.level} · ${dateStr}</div>
                     </div>
                     <div class="record-coins-val">+${r.coins} $</div>
                 `;
@@ -1108,8 +1174,32 @@
         draw();
 
         els.nameInput.addEventListener('input', () => {
-            playerName = els.nameInput.value.trim();
+            const val = els.nameInput.value.trim();
+            const nameError = document.getElementById('nameError');
+            const taken = records.some(r => r.name && r.name.toLowerCase() === val.toLowerCase() && val !== '');
+            if (taken) {
+                nameError.classList.add('visible');
+            } else {
+                nameError.classList.remove('visible');
+            }
+            playerName = val;
             save();
+        });
+
+        // Difficulty buttons
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                SFX.click();
+                document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                difficulty = btn.dataset.diff;
+                save();
+            });
+            if (btn.dataset.diff === difficulty) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
         });
 
         window.addEventListener('resize', () => { if (running && !paused) resize(); });
