@@ -214,6 +214,79 @@
 
         .shop-btn:active { transform: scale(0.96); opacity: 0.8; }
 
+        .records-btn {
+            padding: 12px 32px;
+            background: transparent;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            color: var(--accent);
+            font-family: inherit; font-size: 16px; font-weight: bold;
+            letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .records-btn:active { transform: scale(0.96); opacity: 0.8; }
+
+        .records-list {
+            width: 100%;
+            max-width: 320px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .record-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--btn-border);
+            gap: 12px;
+        }
+
+        .record-row:first-child { border-radius: 8px 8px 0 0; }
+        .record-row:last-child { border-radius: 0 0 8px 8px; border-bottom: none; }
+
+        .record-rank {
+            font-size: 16px;
+            font-weight: bold;
+            width: 28px;
+            text-align: center;
+        }
+
+        .record-rank.gold { color: var(--coin); }
+        .record-rank.silver { color: #c0c0c0; }
+        .record-rank.bronze { color: #cd7f32; }
+
+        .record-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .record-score {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .record-detail {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .record-coins-val {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--coin);
+        }
+
+        .record-empty {
+            padding: 32px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
         /* Shop */
         .shop-grid {
             display: grid;
@@ -371,6 +444,18 @@
         </div>
         <button class="play-btn" id="startBtn">PLAY</button>
         <button class="shop-btn" id="shopBtn">SHOP</button>
+        <button class="records-btn" id="recordsBtn">RECORDS</button>
+    </div>
+
+    <!-- Records Screen -->
+    <div class="overlay hidden" id="recordsScreen">
+        <div class="shop-header">
+            <button class="back-btn" id="recordsBack">&#9664; Back</button>
+            <div class="shop-coins" id="recordsCount">0 games</div>
+        </div>
+        <div class="overlay-title" style="font-size: 24px;">RECORDS</div>
+        <div class="overlay-sub">Топ-10 лучших результатов</div>
+        <div class="records-list" id="recordsList"></div>
     </div>
 
     <!-- Shop Screen -->
@@ -489,6 +574,7 @@
         let highScore = parseInt(localStorage.getItem('snakeHigh') || '0');
         let ownedSkins = JSON.parse(localStorage.getItem('snakeSkins') || '["green","red"]');
         let activeSkin = localStorage.getItem('snakeSkin') || 'green';
+        let records = JSON.parse(localStorage.getItem('snakeRecords') || '[]');
 
         // Game state
         let snake = [];
@@ -517,6 +603,7 @@
             localStorage.setItem('snakeHigh', highScore);
             localStorage.setItem('snakeSkins', JSON.stringify(ownedSkins));
             localStorage.setItem('snakeSkin', activeSkin);
+            localStorage.setItem('snakeRecords', JSON.stringify(records));
         }
 
         // UI elements
@@ -540,6 +627,9 @@
             overScore: document.getElementById('overScore'),
             overMsg: document.getElementById('overMsg'),
             pauseScreen: document.getElementById('pauseScreen'),
+            recordsScreen: document.getElementById('recordsScreen'),
+            recordsList: document.getElementById('recordsList'),
+            recordsCount: document.getElementById('recordsCount'),
         };
 
         function resize() {
@@ -771,7 +861,7 @@
         }
 
         function hideAll() {
-            ['startScreen', 'overScreen', 'levelScreen', 'pauseScreen', 'shopScreen'].forEach(id => {
+            ['startScreen', 'overScreen', 'levelScreen', 'pauseScreen', 'shopScreen', 'recordsScreen'].forEach(id => {
                 els[id].classList.add('hidden');
             });
         }
@@ -782,6 +872,14 @@
             cancelAnimationFrame(animFrame);
             if (score > highScore) { highScore = score; }
             totalCoins += Math.floor(coinCount / 2);
+
+            // Save record
+            if (score > 0) {
+                records.push({ score, level, coins: Math.floor(coinCount / 2), date: Date.now() });
+                records.sort((a, b) => b.score - a.score);
+                records = records.slice(0, 10);
+            }
+
             save();
             els.overScore.textContent = score;
             els.overCoins.textContent = totalCoins;
@@ -862,6 +960,33 @@
             });
         }
 
+        function renderRecords() {
+            els.recordsCount.textContent = records.length + ' games';
+            els.recordsList.innerHTML = '';
+            if (records.length === 0) {
+                els.recordsList.innerHTML = '<div class="record-empty">Пока нет рекордов.<br>Сыграй первую игру!</div>';
+                return;
+            }
+            records.forEach((r, i) => {
+                const row = document.createElement('div');
+                row.className = 'record-row';
+                const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                const medals = ['🥇', '🥈', '🥉'];
+                const rank = i < 3 ? medals[i] : (i + 1);
+                const date = new Date(r.date);
+                const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                row.innerHTML = `
+                    <div class="record-rank ${rankClass}">${rank}</div>
+                    <div class="record-info">
+                        <div class="record-score">${r.score} pts</div>
+                        <div class="record-detail">Level ${r.level} · ${dateStr}</div>
+                    </div>
+                    <div class="record-coins-val">+${r.coins} $</div>
+                `;
+                els.recordsList.appendChild(row);
+            });
+        }
+
         // Controls
         document.querySelectorAll('.btn[data-dir]').forEach(btn => {
             const handler = (e) => {
@@ -888,6 +1013,22 @@
         });
 
         document.getElementById('shopBack').addEventListener('click', () => {
+            SFX.click();
+            hideAll();
+            els.startCoins.textContent = totalCoins;
+            els.startLevel.textContent = level;
+            els.high.textContent = highScore;
+            els.startScreen.classList.remove('hidden');
+        });
+
+        document.getElementById('recordsBtn').addEventListener('click', () => {
+            SFX.click();
+            hideAll();
+            renderRecords();
+            els.recordsScreen.classList.remove('hidden');
+        });
+
+        document.getElementById('recordsBack').addEventListener('click', () => {
             SFX.click();
             hideAll();
             els.startCoins.textContent = totalCoins;
